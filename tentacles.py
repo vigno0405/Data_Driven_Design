@@ -6,7 +6,7 @@ from scipy.linalg import null_space, det
 # Compute geometric and material parameters
 def Get_Parameters(L):
     """Compute geometric and material parameters"""
-    L_trial = 0.01
+    L_trial = 0.025
     N = int(np.round(L / L_trial))
     d_base = 0.02
     d_tip = 0.005
@@ -107,6 +107,11 @@ def equations_of_motion(t, y, params):
     b = np.zeros(N)
     b[1:] = 0.5 * (U_perp[1:] + U_perp[:-1])
     b[0] = 0
+    
+    U_perp = np.clip(U_perp, -10.0, 10.0)      # max 10 m/s
+    a = np.gradient(U_perp, L_i)
+    a = np.clip(a, -100.0, 100.0)            # max 100 m/s²
+    b = np.clip(b, -10.0, 10.0)
 
     M_hydro = - (1 / 12) * rho_w * Cd * A_lat * a * b * L_i**2
 
