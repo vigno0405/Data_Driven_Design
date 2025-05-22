@@ -6,7 +6,7 @@ from scipy.linalg import null_space, det
 # Compute geometric and material parameters
 def Get_Parameters(L):
     """Compute geometric and material parameters"""
-    L_trial = 0.025
+    L_trial = 0.01
     N = int(np.round(L / L_trial))
     d_base = 0.02
     d_tip = 0.005
@@ -99,9 +99,15 @@ def equations_of_motion(t, y, params):
     U_x = np.cumsum(omega * L_i * np.cos(theta))
     U_y = np.cumsum(omega * L_i * np.sin(theta))
     U_perp = U_x * np.cos(theta) + U_y * np.sin(theta)
+    
+    a = np.zeros(N)
+    a[1:] = (U_perp[1:] - U_perp[:-1]) / L_i
+    a[0] = 0
 
-    a = (U_perp - U_perp) / L_i
-    b = (U_perp + U_perp) / 2
+    b = np.zeros(N)
+    b[1:] = 0.5 * (U_perp[1:] + U_perp[:-1])
+    b[0] = 0
+
     M_hydro = - (1 / 12) * rho_w * Cd * A_lat * a * b * L_i**2
 
     alpha = (M_elastic_left + M_elastic_right + M_hydro) / I_i
@@ -201,12 +207,12 @@ def NVE(L, c, f, A, plot=False):
     if plot:
         fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(10, 6), sharex=True)
 
-        ax1.plot(t[:int(len(t)/3)], velocity[:int(len(t)/3)] * 100, color='#E40C2B', linewidth=2)
+        ax1.plot(t, velocity * 100, color='#E40C2B', linewidth=2)
         ax1.axhline(np.mean(velocity) * 100, color='black', linestyle='--', linewidth=1.0)
         ax1.set_ylabel('Velocity [cm/s]')
         ax1.grid(True)
 
-        ax2.plot(t[:int(len(t)/3)], thrust[:int(len(t)/3)] * 1000, color='#009CA6', linewidth=2)
+        ax2.plot(t, thrust * 1000, color='#009CA6', linewidth=2)
         ax2.axhline(np.mean(thrust) * 1000, color='r', linestyle='--', linewidth=1.0)
         ax2.set_ylabel('Thrust [mN]')
         ax2.set_xlabel('Time [s]')
